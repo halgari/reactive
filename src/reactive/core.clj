@@ -67,7 +67,6 @@
 
 (defn should-mark-dirty? [state]
   (let [vals (get-vals state)]
-    (println vals @state (:mark-dirty? @state))
     (apply (:mark-dirty? @state) vals)))
 
 (defn get-deref-value [state]
@@ -152,9 +151,30 @@
        (apply ((first slots))
               (map #(%) (next slots)))))))
 
+(def interpret-binding)
 
+(defn interpret-invoke [bindings]
+  (let [bindings (vec bindings)
+        nd (gensym "invokesym")]
+    `(let [~nd (reactive-invoke ~(count bindings))]
+       ~@(for [b (range (count bindings))]
 
+           `(connect ~(interpret-binding (bindings b))
+                     ~nd
+                     ~b))
+       ~nd)))
 
+(defn interpret-binding [bindings]
+  (cond (seq? bindings)
+        (interpret-invoke bindings)
+        :else
+        `(lift ~bindings)))
+
+(defmacro bind
+  ([itm bindings]
+      `(connect ~(interpret-binding bindings) ~itm))
+  ( [itm slot bindings]
+      `(connect ~(interpret-binding bindings) ~itm slot)))
 
 (defn connect
    ([src dest]

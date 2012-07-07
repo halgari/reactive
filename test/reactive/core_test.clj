@@ -30,3 +30,21 @@
     (is (= @a 2))
     (next-event v 41)
     (is (= @a 42))))
+
+(deftest simple-binding
+  (let [a (reactive-atom)]
+    (bind a 1)
+    (is (= @a 1))))
+
+(deftest simple-binding2
+  (let [a (reactive-atom)]
+    (bind a (+ 1 2))
+    (is (= @a 3))))
+
+(deftest square-test
+  (let [a (reactive-atom)
+        v (reactive-cell 1)]
+    (bind a (* v v))
+    (is (= @a 1))
+    (next-event v 42)
+    (is (= @a 1764))))
