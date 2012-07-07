@@ -15,6 +15,10 @@
   (push-update [this]))
 
 
+(defprotocol INextEvent
+  (next-event [this v]))
+
+
 ; This represents a contstant that has been lifted
 
 (deftype LiftedValue [v]
@@ -30,8 +34,33 @@
     (LiftedValue. v)
     v))
 
+(defn reactive-cell [init]
+  (let [value (atom init)
+        listeners (atom {})]
+    (reify
+      IObservable
+      (attach [this k sink]
+        (swap! listeners assoc k sink)
+        (mark-dirty sink #(deref-value this))
+        (push-update sink))
+      (detatch [this k]
+        (swap! listeners dissoc k))
+      (deref-value [this] @value)
+      INextEvent
+      (next-event [this v]
+        (reset! value v)
+        (doall
+         (for [[_ l] @listeners]
+           (mark-dirty l #(deref-value this))))
+        (doall
+         (for [[_ l] @listeners]
+           (push-update l)))))))
+
 (defn unknown? [v]
   (= v ::unknown))
+
+(defn not-unknown? [v]
+  (not (= v ::unknown)))
 
 (defn get-vals [state]
   (map :value-fn (vals (:slots @state))))
@@ -110,6 +139,18 @@
      (if (unknown? default)
        default
        (default)))))
+
+
+(defn reactive-invoke [slots]
+  (reactive-node
+   (vec (range slots))
+   (fn [& slots] true)
+   (fn [& slots]
+     (every? not-unknown? slots))
+   (fn [& slots]
+     (if (every? not-unknown? slots)
+       (apply ((first slots))
+              (map #(%) (next slots)))))))
 
 
 
