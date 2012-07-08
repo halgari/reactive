@@ -18,6 +18,15 @@
     (next-event l 2)
     (is (= @a 2))))
 
+(deftest test-action
+  (let [l (reactive-cell 1)
+        a (atom nil)
+        action (reactive-action #(reset! a %))]
+    (connect l action)
+    (is (= @a 1))
+    (next-event l 42)
+    (is (= @a 42))))
+
 (deftest invoke-test
   (let [fn (lift inc)
         rf (reactive-invoke 2)

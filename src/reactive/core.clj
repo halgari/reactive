@@ -1,6 +1,9 @@
 (ns reactive.core)
 
 
+(defprotocol IObservableLookup
+  (get-observable [this k] "Gets the observable event stream with the given name"))
+
 (defprotocol IObservable
   (attach [this k sink] "Attaches sink to this event stream with the specified key")
   (detatch [this k] "Detatches the sink associated with k")
@@ -139,6 +142,15 @@
        default
        (default)))))
 
+(defn reactive-action [action]
+  (reactive-node
+   [:default]
+   (fn [default] true)
+   (fn [default]
+     (when (not-unknown? default)
+           (action (default)))
+     true)
+   (fn [default] (default))))
 
 (defn reactive-invoke [slots]
   (reactive-node
