@@ -25,9 +25,9 @@
 
 (defmethod make-socket :title
   [this k]
-  (core/reactive-action
-   (fn [s]
-     (.setTitle this s))))
+  (core/get-socket (core/reactive-action
+                    (fn [s]
+                      (.setTitle this s)))))
 
 (extend-type JFrame
   core/IObservableLookup
@@ -35,4 +35,4 @@
   core/IObserver
   (core/get-socket
     ([this] nil)
-    ([this k] (make-socket this k))))
+    ([this k] (let [s (make-socket this k)] (println "socket JFrame" s) s))))

@@ -10,5 +10,4 @@
     (doto f
       (.setSize 400 400)
       (.setVisible true))
-    (core/connect (core/get-observable f :mouse-pos) a)
-    ))
+    (core/bind f :title (str f:mouse-pos))))

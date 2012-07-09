@@ -1,4 +1,5 @@
-(ns reactive.core)
+(ns reactive.core
+  (:require [clojure.string :as string]))
 
 
 (defprotocol IObservableLookup
@@ -150,7 +151,9 @@
      (when (not-unknown? default)
            (action (default)))
      true)
-   (fn [default] (default))))
+   (fn [default]
+     (when (not-unknown? default)
+       (default)))))
 
 (defn reactive-invoke [slots]
   (reactive-node
@@ -176,17 +179,30 @@
                      ~b))
        ~nd)))
 
+
+(defn interpret-symbol [s]
+  (let [sp (clojure.string/split (name s) #":")]
+    (if (= (count sp) 2)
+      `(get-observable ~(symbol (first sp)) ~(keyword (second sp)))
+       `(lift ~s))))
+
 (defn interpret-binding [bindings]
   (cond (seq? bindings)
         (interpret-invoke bindings)
+        (symbol? bindings)
+        (interpret-symbol bindings)
         :else
         `(lift ~bindings)))
+
+(defn debug [x]
+  (println x)
+  x)
 
 (defmacro bind
   ([itm bindings]
       `(connect ~(interpret-binding bindings) ~itm))
   ( [itm slot bindings]
-      `(connect ~(interpret-binding bindings) ~itm slot)))
+      (debug `(connect ~(interpret-binding bindings) ~itm ~slot))))
 
 (defn connect
    ([src dest]
