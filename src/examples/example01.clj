@@ -5,8 +5,7 @@
 
 
 (defn -main []
-  (let [f (JFrame.)
-        a (core/reactive-action #(println %)) ]
+  (let [f (JFrame.)]
     (doto f
       (.setSize 400 400)
       (.setVisible true))
